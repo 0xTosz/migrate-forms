@@ -1,0 +1,19 @@
+{
+    "metaData": {
+        "id": "testid",
+        "version": 0
+    },
+    "components": [
+        {
+            "layout": "vertical",
+            "components": [
+                {
+                    "layout": "vertical",
+                    "components": [
+                        
+                    ]
+                }
+            ]
+        }
+    ]
+}

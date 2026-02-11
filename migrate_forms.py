@@ -71,6 +71,11 @@ def migrate_node(node, parent_key=None):
         # Only rename "request" → "payload" in iframe message objects
         is_iframe_message = "requestName" in node
 
+        # Infer "type": "container" for components with nested children but no type.
+        # Only applies inside a "components" array, not at the top-level form object.
+        if "components" in node and "type" not in node and parent_key == "components":
+            migrated["type"] = "container"
+
         for key, value in node.items():
 
             # --- Remove deprecated keys ---
