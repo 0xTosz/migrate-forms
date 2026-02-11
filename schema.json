@@ -1,0 +1,819 @@
+{
+  "$id": "https://forms.virtimo.net/5.1.0/schema.json",
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "metaData",
+    "configuration",
+    "components"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "metaData": {
+      "description": "Meta information with no impact to the form itself",
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "description": "ID of the form",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "name": {
+          "description": "Name of the form",
+          "type": "string"
+        },
+        "version": {
+          "description": "Version",
+          "type": "number"
+        },
+        "creationDate": {
+          "description": "Date of the creation of the form in ISO 8601 format",
+          "type": "string"
+        },
+        "author": {
+          "description": "Name of the author of the form",
+          "type": "string"
+        }
+      }
+    },
+    "configuration": {
+      "description": "General form configuration",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "validationUrl": {
+          "description": "URL for server side validation",
+          "type": "string"
+        },
+        "submitUrl": {
+          "description": "URL for form submit",
+          "type": "string"
+        },
+        "stateUrl": {
+          "description": "URL for loading JSON data to apply to the form state.",
+          "type": "string"
+        },
+        "defaultLanguage": {
+          "description": "Default language for the form",
+          "type": "string"
+        },
+        "validateOnChange": {
+          "description": "Trigger the validation when after the value changed and the field lost focus",
+          "type": "boolean"
+        },
+        "validateOnBlur": {
+          "description": "Trigger the validation when the focus between fields changes",
+          "type": "boolean"
+        },
+        "styles": {
+          "description": "Style Rules",
+          "type": "object",
+          "additionalProperties": false,
+          "properties" : {
+            "variables" : {
+              "description": "Contains css-variables and their values",
+              "type": "object"
+            },
+            "css" : {
+              "description": "Css rules",
+              "type": "string"
+            },
+            "cssURL" : {
+              "description": "URL to extern Css.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "description": "UI components for the form",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/component"
+      }
+    },
+    "dataSchema": {
+      "description": "Optional JSON Schema for client side data validation",
+      "type": "object",
+      "$ref": "https://json-schema.org/draft/2019-09/schema"
+    },
+    "state": { "$ref": "#/definitions/state" }
+  },
+  "definitions": {
+    "state": {
+      "description": "Optional object which defines the initial/current state of the form",
+      "type": "object",
+      "properties" : {
+        "data" : {
+          "description": "Space for additional information (data for the form)",
+          "type": "object"
+        }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "required": ["action"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "dialog",
+            "downloadFile",
+            "getFormConfig",
+            "getFormState",
+            "multiActions",
+            "print",
+            "reset",
+            "resetRenderer",
+            "setFormConfig",
+            "setFormState",
+            "submit",
+            "validate",
+            "validationErrors"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "dialog" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "iconClass": { "type": "string" },
+                  "iconColor": { "type": "string" },
+                  "message": { "$ref": "#/definitions/optionalMultiLanguageText" },
+                  "title": { "$ref": "#/definitions/optionalMultiLanguageText" },
+                  "type": {
+                    "enum": ["error, info", "success"]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "downloadFile" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "base64Encoded": { "type": "boolean" },
+                  "data": { "type": "string" },
+                  "fileName": { "type": "string" },
+                  "mimeType": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "getFormConfig" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "getFormState" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "multiActions" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/actions" }
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "setFormConfig" } } },
+          "then": {
+            "properties": {
+              "payload": { "$ref": "#" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "setFormState" } } },
+          "then": {
+            "properties": {
+              "payload": { "$ref": "#/definitions/state" }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "submit" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "validate" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": { "required": ["action"], "properties": { "action": { "const": "validationErrors" } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "$ref": "#/definitions/optionalMultiLanguageText" },
+                    "instancePath": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "component": {
+      "type": "object",
+      "required": ["type"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "button", "checkbox", "checkboxgroup", "combobox", "container",
+            "datefield", "fieldset", "filefield", "html", "image",
+            "numberfield", "radiogroup", "table", "textarea", "textfield"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/componentForms"
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": ["checkbox"] } } },
+          "then": { "$ref": "#/definitions/componentWithBoxLabel"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": [
+            "checkbox", "checkboxgroup", "combobox", "datefield", "filefield",
+            "numberfield", "radiogroup", "textarea", "textfield"
+          ] } } },
+          "then": { "$ref": "#/definitions/componentWithDetailedLabel"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": [
+            "button", "checkbox", "checkboxgroup", "combobox", "container",
+            "datefield", "fieldset", "filefield", "numberfield", "radiogroup",
+            "textarea", "textfield"
+          ] } } },
+          "then": { "type": "object", "properties": {"icon":{"$ref": "#/definitions/icon"}}}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": [
+            "button", "container", "checkbox", "checkboxgroup", "combobox",
+            "datefield", "fieldset", "filefield", "numberfield", "radiogroup",
+            "table", "textarea", "textfield"
+          ] } } },
+          "then": { "type": "object", "properties": {
+            "label":{"$ref": "#/definitions/label"},
+            "disabled":{"$ref": "#/definitions/disabled"}
+          }}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": [
+            "checkbox", "combobox", "datefield", "filefield", "numberfield",
+            "radiogroup", "textarea", "textfield"
+          ] } } },
+          "then": { "type": "object", "properties": {
+            "onChange":{"$ref": "#/definitions/onChange"},
+            "errorTarget":{"$ref": "#/definitions/errorTarget"}
+          }}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": [
+            "container", "combobox", "datefield", "fieldset", "numberfield",
+            "textarea", "textfield"
+          ] } } },
+          "then": { "type": "object", "properties": {"readOnly":{"$ref": "#/definitions/readOnly"}}}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "enum": [
+            "container", "checkbox", "checkboxgroup", "combobox", "datefield",
+            "fieldset", "filefield", "numberfield", "radiogroup", "textarea",
+            "textfield"
+          ] } } },
+          "then": { "type": "object", "properties": {"required":{"$ref": "#/definitions/required"}}}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "button" } } },
+          "then": { "$ref": "#/definitions/button"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "container" } } },
+          "then": { "$ref": "#/definitions/container"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "checkbox" } } },
+          "then": { "$ref": "#/definitions/checkbox"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "checkboxgroup" } } },
+          "then": { "$ref": "#/definitions/checkboxgroup"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "combobox" } } },
+          "then": { "$ref": "#/definitions/combobox"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "datefield" } } },
+          "then": { "$ref": "#/definitions/datefield"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "fieldset" } } },
+          "then": { "$ref": "#/definitions/fieldset"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "filefield" } } },
+          "then": { "$ref": "#/definitions/filefield"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "html" } } },
+          "then": { "$ref": "#/definitions/html"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "image" } } },
+          "then": { "$ref": "#/definitions/image"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "numberfield" } } },
+          "then": { "$ref": "#/definitions/numberfield"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "radiogroup" } } },
+          "then": { "$ref": "#/definitions/radiogroup"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "table" } } },
+          "then": { "$ref": "#/definitions/table"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "textarea" } } },
+          "then": { "$ref": "#/definitions/textarea"}
+        },
+        {
+          "if": { "required": ["type"], "properties": { "type": { "const": "textfield" } } },
+          "then": { "$ref": "#/definitions/textfield"}
+        }
+      ]
+    },
+    "componentForms": {
+      "type": "object",
+      "properties": {
+        "configuration": {
+          "description": "Additional Properties, which are applied to the component",
+          "type": "object"
+        },
+        "flex": {
+          "description": "Flexible sizing of this component",
+          "anyOf": [{"type": "string"}, {"type": "number"}, {"type": "object"}]
+        },
+        "height": {
+          "description": "The height of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. By default, if this is not explicitly set, this Component's element will simply have its own natural size. If set to auto, it will set the width to null meaning it will have its own natural size",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "hidden": {
+          "description": "With hidden true the content of the component is not displayed for the user",
+          "anyOf": [{"type": "boolean"}, {"type": "string"}]
+        },
+        "id": {
+          "description": "Unique identifier in the form",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "maxHeight": {
+          "description": "The maximum height of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. If set to auto, it will set the width to null meaning it will have its own natural size. ",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "maxWidth": {
+          "description": "The maximum width of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. If set to auto, it will set the width to null meaning it will have its own natural size. ",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "minHeight": {
+          "description": "The minimum height of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. If set to auto, it will set the width to null meaning it will have its own natural size",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "minWidth": {
+          "description": "The minimum width of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. If set to auto, it will set the width to null meaning it will have its own natural size",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "onClick": {"$ref": "#/definitions/onClick"},
+        "onPainted": {"$ref": "#/definitions/onPainted"},
+        "responsiveConfiguration": {
+          "description": "Object with keys on which conditions the value will be applied",
+          "type": "object"
+        },
+        "width": {
+          "description": "The width of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. By default, if this is not explicitly set, this Component's element will simply have its own natural size. If set to auto, it will set the width to null meaning it will have its own natural size",
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        }
+      }
+    },
+    "componentWithBoxLabel": {
+      "type": "object",
+      "properties": {
+        "boxLabel": {
+          "description": "Label which appears next to input",
+          "$ref": "#/definitions/optionalMultiLanguageText"
+        },
+        "boxLabelAlign": {
+          "description": "Position of boxLabel relative to input",
+          "enum": ["after", "before"]
+        }
+      }
+    },
+    "componentWithDetailedLabel": {
+      "type": "object",
+      "properties": {
+        "labelAlign": {
+          "enum": ["top", "left", "bottom", "right"]
+        },
+        "labelTextAlign": {
+          "enum": ["top", "left", "bottom", "right"]
+        },
+        "labelMinWidth": {
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "labelWidth": {
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "labelWrap": {
+          "type": "boolean"
+        }
+      }
+    },
+    "disabled": {
+      "description": "With disabled true the content of the component is not editable for the user and the component looks different",
+      "anyOf": [{"type": "boolean"}, {"type": "string"}]
+    },
+    "errorTarget": {
+      "description": "Location of error message",
+      "enum": ["qtip", "side", "title", "under"]
+    },
+    "icon": {
+      "description": "Font-Awesome-Icon is displayed beside the element",
+      "type": "string"
+    },
+    "label": {
+      "description": "Describes the content of the element",
+      "$ref": "#/definitions/optionalMultiLanguageText"
+    },
+    "layout": {
+      "description": "Layout of components within this component",
+      "enum": [ "vertical", "horizontal" ]
+    },
+    "onChange": {
+      "description": "This action is triggered if the state of the component changes",
+      "$ref": "#/definitions/actions"
+    },
+    "onClick": {
+      "description": "This action is triggered if the component is clicked",
+      "$ref": "#/definitions/actions"
+    },
+    "onPainted": {
+      "description": "This action is triggered if the component is painted for the first time",
+      "$ref": "#/definitions/actions"
+    },
+    "readOnly": {
+      "description": "With readOnly true the content of the component is not editable for the user",
+      "anyOf": [{"type": "boolean"}, {"type": "string"}]
+    },
+    "required": {
+      "description": "With required true the user has to input something",
+      "anyOf": [{"type": "boolean"}, {"type": "string"}]
+    },
+    "optionalMultiLanguageText": {
+      "description": "This could be a simple string or an object. The object has MULTI_LANGUAGE as key and as value an object with ISO-639-1 codes as keys and strings as values",
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "MULTI_LANGUAGE"
+          ],
+          "properties": {
+            "MULTI_LANGUAGE" : {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "propertyNames": {
+                "description": "Has to be a 2 character ISO-639-1 code",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "patternProperties": {
+                "^(aa|ab|ae|af|ak|am|an|ar|as|av|ay|az|ba|be|bg|bh|bi|bm|bn|bo|br|bs|ca|ce|ch|co|cr|cs|cu|cv|cy|da|de|dv|dz|ee|el|en|eo|es|et|eu|fa|ff|fi|fj|fo|fr|fy|ga|gd|gl|gn|gu|gv|ha|he|hi|ho|hr|ht|hu|hy|hz|ia|id|ie|ig|ii|ik|io|is|it|iu|ja|jv|ka|kg|ki|kj|kk|kl|km|kn|ko|kr|ks|ku|kv|kw|ky|la|lb|lg|li|ln|lo|lt|lu|lv|mg|mh|mi|mk|ml|mn|mr|ms|mt|my|na|nb|nd|ne|ng|nl|nn|no|nr|nv|ny|oc|oj|om|or|os|pa|pi|pl|ps|pt|qu|rm|rn|ro|ru|rw|sa|sc|sd|se|sg|si|sk|sl|sm|sn|so|sq|sr|ss|st|su|sv|sw|ta|te|tg|th|ti|tk|tl|tn|to|tr|ts|tt|tw|ty|ug|uk|ur|uz|ve|vi|vo|wa|wo|xh|yi|yo|za|zh|zu)$": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "button": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "enum": [
+            "submit",
+            "reset",
+            "validate",
+            "print",
+            "setProperty"
+          ]
+        }
+      },
+      "if": { "required": ["action"], "properties": {"action": {"const": "setProperty"}}},
+      "then": {
+        "required" : ["target", "value"],
+        "type": "object",
+        "properties": {"target": {"type" :"string"}, "value": {}}
+      }
+    },
+    "checkbox": {
+      "type": "object",
+      "properties": {
+        "value": {"anyOf": [{"type": "boolean"}, {"type": "string"}] }
+      }
+    },
+    "checkboxgroup": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "allOf" : [
+              {"$ref": "#/definitions/component"},
+              {"type": "object", "properties": { "type": { "const": "checkbox" } }}
+            ]
+          }
+        }
+      },
+      "required": [ "components" ]
+    },
+    "combobox": {
+      "type": "object",
+      "properties": {
+        "forceSelect": {"type": "boolean"},
+        "multiSelect": {"type": "boolean"},
+        "value": {"anyOf": [{"type": "number"}, {"type": "string"}] },
+        "options": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "unevaluatedProperties": false,
+                "properties": {
+                  "label": {
+                    "$ref": "#/definitions/label"
+                  },
+                  "value": {"anyOf": [{"type": "number"}, {"type": "string"}] }
+                },
+                "required": [
+                  "value",
+                  "label"
+                ]
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "required": [
+        "options"
+      ]
+    },
+    "container": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/component"
+          }
+        },
+        "layout": { "$ref": "#/definitions/layout" },
+        "languageButton": { "type" : "boolean" }
+      },
+      "required": [ "components" ]
+    },
+    "datefield": {
+      "type": "object",
+      "properties": {
+        "value": {"type": "string"}
+      }
+    },
+    "fieldset": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/component"
+          }
+        },
+        "layout": { "$ref": "#/definitions/layout" }
+      },
+      "required": [ "components" ]
+    },
+    "filefield": {
+      "type": "object",
+      "properties": {
+        "value": {"type": "string"}
+      }
+    },
+    "html": {
+      "type": "object",
+      "properties": {
+        "value": {"type": "string"}
+      }
+    },
+    "image": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "src": {"type": "string"}
+          },
+          "required": ["src"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "encodedData": {"type": "string"},
+            "mimeType": {"type": "string"}
+          },
+          "required": ["encodedData", "mimeType"]
+        }
+      ]
+    },
+    "numberfield": {
+      "type": "object",
+      "properties": {
+        "value": {"anyOf": [{"type": "number"}, {"type": "string"}]}
+      }
+    },
+    "radio": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "disabled": {"$ref": "#/definitions/disabled"},
+            "icon": {"$ref": "#/definitions/icon"},
+            "label": {"$ref": "#/definitions/label"},
+            "onChange": {"$ref": "#/definitions/onChange"},
+            "value": {
+              "anyOf": [{"type": "number"}, {"type": "string"}]
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {"$ref": "#/definitions/componentForms"},
+        {"$ref": "#/definitions/componentWithBoxLabel"},
+        {"$ref": "#/definitions/componentWithDetailedLabel"}
+      ]
+    },
+    "radiogroup": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        },
+        "options": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/radio"}
+        }
+      },
+      "required": [
+        "options"
+      ]
+    },
+    "table": {
+      "type": "object",
+      "properties": {
+        "data": {"anyOf": [{"type": "array"}, {"type": "string"}] },
+        "dataUrl": {"type": "string"},
+        "cellEditing": {"type": "boolean"},
+        "rowEditing": {"type": "boolean"},
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "allOf": [
+              {
+                "type": "object",
+                "unevaluatedProperties": false,
+                "properties" : {
+                  "type": {
+                    "enum": [
+                      "text",
+                      "number",
+                      "date",
+                      "boolean"
+                    ]
+                  },
+                  "label": {"$ref": "#/definitions/label"},
+                  "fieldName": {"type": "string"}
+                }
+              },
+              {"$ref": "#/definitions/componentForms"}
+            ]
+          }
+        }
+      }
+    },
+    "textarea": {
+      "type": "object",
+      "properties": {
+        "value": {"type": "string"}
+      }
+    },
+    "textfield": {
+      "type": "object",
+      "properties": {
+        "value": {"type": "string"}
+      }
+    }
+  }
+}
