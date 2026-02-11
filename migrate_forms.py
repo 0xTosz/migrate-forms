@@ -37,6 +37,12 @@ ACTION_RENAMES = {
 # Binding path pattern: paths like "/data/..." or "/state/..." used in form bindings
 BINDING_RE = re.compile(r"^/(data|state)/.")
 
+# 4.x component types that should map to "container" in 5.0
+CONTAINER_TYPE_ALIASES = {
+    "panel", "form", "vbox", "hbox", "tabpanel", "window",
+    "toolbar", "fieldcontainer",
+}
+
 
 def looks_like_multilang(obj: dict) -> bool:
     """Return True if every key in the dict is a known language code."""
@@ -73,8 +79,13 @@ def migrate_node(node, parent_key=None):
 
         # Infer "type": "container" for components with nested children but no type.
         # Only applies inside a "components" array, not at the top-level form object.
-        if "components" in node and "type" not in node and parent_key == "components":
+        if parent_key == "components" and "components" in node and "type" not in node:
             migrated["type"] = "container"
+
+        # Rename "items" → "components" (old ExtJS convention)
+        if "items" in node and "components" not in node and parent_key == "components":
+            node["components"] = node.pop("items")
+            print(f"INFO: Renamed 'items' -> 'components'", file=sys.stderr)
 
         for key, value in node.items():
 
@@ -86,6 +97,13 @@ def migrate_node(node, parent_key=None):
             new_key = key
             if key == "dataUrl":
                 new_key = "stateUrl"
+
+            # --- Map old 4.x component types to "container" ---
+            if key == "type" and parent_key == "components" and isinstance(value, str):
+                if value.lower() in CONTAINER_TYPE_ALIASES:
+                    print(f"INFO: Renamed component type '{value}' -> 'container'",
+                          file=sys.stderr)
+                    value = "container"
             elif key == "requestName":
                 new_key = "action"
             elif key == "request" and is_iframe_message:
