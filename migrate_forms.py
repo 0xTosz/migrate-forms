@@ -5,8 +5,10 @@ Reference: https://docs.virtimo.net/en/bpc-docs/5.0/core/admin/migration/migrati
 
 Usage:
     python migrate_forms.py <input.json> [output.json]
+    python migrate_forms.py <input_dir/> [output_dir/]
 
-If output is omitted, writes to <input>_migrated.json.
+Single file: if output is omitted, writes to <input>_migrated.json.
+Directory:   if output is omitted, writes to <input_dir>_migrated/.
 """
 
 import json
@@ -93,6 +95,15 @@ def migrate_node(node, parent_key=None):
             if key == "onChangeBufferTime":
                 continue
 
+            # --- allowBlank -> required ---
+            if key == "allowBlank":
+                if value is False:
+                    migrated["required"] = True
+                    print("INFO: Replaced 'allowBlank: false' -> 'required: true'",
+                          file=sys.stderr)
+                # allowBlank: true means not required, which is the default — drop it
+                continue
+
             # --- Rename keys ---
             new_key = key
             if key == "dataUrl":
@@ -144,30 +155,46 @@ def migrate_form(form: dict) -> dict:
     return migrate_node(deepcopy(form))
 
 
+def migrate_file(input_path: Path, output_path: Path):
+    """Migrate a single JSON file and write the result."""
+    try:
+        with open(input_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        print(f"SKIP: {input_path} ({e})", file=sys.stderr)
+        return
+
+    if isinstance(data, list):
+        migrated = [migrate_form(form) for form in data]
+    else:
+        migrated = migrate_form(data)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(migrated, f, indent=2, ensure_ascii=False)
+
+    print(f"Migrated: {input_path} -> {output_path}")
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__.strip())
         sys.exit(1)
 
     input_path = Path(sys.argv[1])
-    if len(sys.argv) >= 3:
-        output_path = Path(sys.argv[2])
+    output_arg = Path(sys.argv[2]) if len(sys.argv) >= 3 else None
+
+    if input_path.is_dir():
+        output_dir = output_arg if output_arg else input_path.parent / (input_path.name + "_migrated")
+        files = [f for f in input_path.iterdir() if f.is_file()]
+        if not files:
+            print(f"No files found in {input_path}", file=sys.stderr)
+            sys.exit(1)
+        for f in files:
+            migrate_file(f, output_dir / f.name)
     else:
-        output_path = input_path.with_stem(input_path.stem + "_migrated")
-
-    with open(input_path, encoding="utf-8") as f:
-        data = json.load(f)
-
-    # Support both a single form object and an array of forms
-    if isinstance(data, list):
-        migrated = [migrate_form(form) for form in data]
-    else:
-        migrated = migrate_form(data)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(migrated, f, indent=2, ensure_ascii=False)
-
-    print(f"Migrated: {input_path} -> {output_path}")
+        output_path = output_arg if output_arg else input_path.with_stem(input_path.stem + "_migrated")
+        migrate_file(input_path, output_path)
 
 
 if __name__ == "__main__":
