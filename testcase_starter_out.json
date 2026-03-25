@@ -1,0 +1,185 @@
+{
+  "windowWidth": 900,
+  "windowHeight": 600,
+  "processes": [
+    {
+      "key": "datenUebertragen",
+      "label": {
+        "MULTI_LANGUAGE": {
+          "de": "Daten übertragen",
+          "en": "Transfer Data"
+        }
+      },
+      "description": {
+        "MULTI_LANGUAGE": {
+          "de": "Startet den Übertragungsprozess",
+          "en": "Starts the transfer process"
+        }
+      },
+      "iconCls": "x-fal fa-exchange",
+      "startWithContext": true,
+      "labelWidth": 200,
+      "dataEndpoint": "/api/starter/data",
+      "dataLoadInitial": true,
+      "dataLoadOnChange": true,
+      "changeBufferTimeInMs": 300,
+      "notificationDisplayMode": "toast",
+      "parameters": [
+        {
+          "key": "mandant",
+          "label": {
+            "MULTI_LANGUAGE": {
+              "de": "Mandant",
+              "en": "Client"
+            }
+          },
+          "type": "choice",
+          "tooltip": {
+            "MULTI_LANGUAGE": {
+              "de": "Wählen Sie den Mandanten",
+              "en": "Select the client"
+            }
+          },
+          "options": [
+            {
+              "key": "default",
+              "label": {
+                "MULTI_LANGUAGE": {
+                  "de": "Standard",
+                  "en": "Default"
+                }
+              }
+            },
+            {
+              "key": "test",
+              "label": {
+                "MULTI_LANGUAGE": {
+                  "de": "Test",
+                  "en": "Test"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "key": "dateRange",
+          "label": {
+            "MULTI_LANGUAGE": {
+              "de": "Zeitraum",
+              "en": "Date Range"
+            }
+          },
+          "type": "dateFromTo",
+          "minValue": "CURRENT_DATE - 365",
+          "maxValue": "CURRENT_DATE + 30"
+        },
+        {
+          "key": "amount",
+          "label": "Amount",
+          "type": "number",
+          "optional": false,
+          "minValue": 0,
+          "maxValue": 10000
+        },
+        {
+          "key": "comment",
+          "label": {
+            "MULTI_LANGUAGE": {
+              "de": "Kommentar",
+              "en": "Comment"
+            }
+          },
+          "type": "textarea",
+          "optional": true,
+          "height": 100,
+          "regex": "^.{0,500}$",
+          "regexText": {
+            "MULTI_LANGUAGE": {
+              "de": "Maximal 500 Zeichen",
+              "en": "Maximum 500 characters"
+            }
+          }
+        },
+        {
+          "key": "uploadFile",
+          "label": {
+            "MULTI_LANGUAGE": {
+              "de": "Datei hochladen",
+              "en": "Upload File"
+            }
+          },
+          "type": "upload",
+          "optional": true
+        },
+        {
+          "key": "positions",
+          "label": {
+            "MULTI_LANGUAGE": {
+              "de": "Positionen",
+              "en": "Positions"
+            }
+          },
+          "type": "table",
+          "columns": [
+            {
+              "key": "articleNr",
+              "label": {
+                "MULTI_LANGUAGE": {
+                  "de": "Artikelnummer",
+                  "en": "Article Number"
+                }
+              },
+              "type": "text"
+            },
+            {
+              "key": "quantity",
+              "label": {
+                "MULTI_LANGUAGE": {
+                  "de": "Menge",
+                  "en": "Quantity"
+                }
+              },
+              "type": "number"
+            }
+          ]
+        }
+      ],
+      "right": [
+        "bpcMonitor_startProcess"
+      ],
+      "role": [
+        "admin",
+        "operator"
+      ]
+    },
+    {
+      "key": "reportErstellen",
+      "label": {
+        "MULTI_LANGUAGE": {
+          "de": "Report erstellen",
+          "en": "Generate Report"
+        }
+      },
+      "description": {
+        "MULTI_LANGUAGE": {
+          "de": "Erstellt einen Bericht",
+          "en": "Creates a report"
+        }
+      },
+      "bpcFormsId": "report-form-1",
+      "hidden": false
+    },
+    {
+      "key": "simpleProcess",
+      "label": "Simple Process",
+      "description": "A process with plain string labels (no migration needed)",
+      "parameters": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

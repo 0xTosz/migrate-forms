@@ -45,6 +45,12 @@ CONTAINER_TYPE_ALIASES = {
     "toolbar", "fieldcontainer",
 }
 
+# Component types that support readOnly in 5.0
+READONLY_SUPPORTED_TYPES = {
+    "container", "combobox", "datefield", "fieldset",
+    "numberfield", "textarea", "textfield",
+}
+
 
 def looks_like_multilang(obj: dict) -> bool:
     """Return True if every key in the dict is a known language code."""
@@ -94,6 +100,25 @@ def migrate_node(node, parent_key=None):
             # --- Remove deprecated keys ---
             if key == "onChangeBufferTime":
                 continue
+
+            if key == "baseColor":
+                print(f"WARNING: Removed 'baseColor: {value!r}' from configuration. "
+                      f"If needed, move it to configuration.styles.variables as a CSS custom property.",
+                      file=sys.stderr)
+                continue
+
+            # --- readOnly on unsupported types -> disabled ---
+            if key == "readOnly":
+                comp_type = node.get("type", "")
+                if comp_type and comp_type not in READONLY_SUPPORTED_TYPES:
+                    if value:
+                        migrated["disabled"] = True
+                        print(f"INFO: Converted 'readOnly: true' -> 'disabled: true' "
+                              f"on '{comp_type}' (readOnly not supported on this type)",
+                              file=sys.stderr)
+                    # readOnly: false on unsupported type — just drop it
+                    continue
+                # supported type — fall through to normal handling
 
             # --- allowBlank -> required ---
             if key == "allowBlank":
