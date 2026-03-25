@@ -3,8 +3,10 @@ Validate a BPC 5.0 form JSON against the forms schema.
 
 Usage:
     python validate_form.py <form.json> [schema.json]
+    python validate_form.py <forms_dir/> [schema.json]
 
 If schema path is omitted, looks for schema.json in the same directory as this script.
+Flags: -v / --verbose  show full error tree
 """
 
 import json
@@ -66,33 +68,19 @@ def format_error_tree(error, indent=0) -> str:
     return "\n".join(lines)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print(__doc__.strip())
-        sys.exit(1)
+def validate_file(form_path: Path, validator: Draft201909Validator, verbose: bool) -> bool:
+    """Validate a single file. Returns True if valid."""
+    try:
+        form = load_json(form_path)
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        print(f"SKIP: {form_path} ({e})")
+        return False
 
-    form_path = Path(sys.argv[1])
-    verbose = "--verbose" in sys.argv or "-v" in sys.argv
-    args = [a for a in sys.argv[2:] if not a.startswith("-")]
-
-    if args:
-        schema_path = Path(args[0])
-    else:
-        schema_path = Path(__file__).parent / "schema.json"
-
-    if not schema_path.exists():
-        print(f"ERROR: Schema not found at {schema_path}", file=sys.stderr)
-        sys.exit(1)
-
-    schema = load_json(schema_path)
-    form = load_json(form_path)
-
-    validator = build_validator(schema)
     errors = sorted(validator.iter_errors(form), key=lambda e: list(e.absolute_path))
 
     if not errors:
         print(f"VALID: {form_path}")
-        return
+        return True
 
     # Collect leaf errors — these are the actual root causes, not cascading wrappers
     all_leaves = []
@@ -119,10 +107,8 @@ def main():
     for i, leaf in enumerate(unique_leaves):
         if leaf.validator != "unevaluatedProperties":
             continue
-        # Check if this component has type=container/fieldset in the instance
         instance = leaf.instance
         if isinstance(instance, dict) and instance.get("type") in ("container", "fieldset"):
-            # The "unexpected" props listed in the message
             unexpected = {p for p in CONTAINER_PROPS if f"'{p}'" in leaf.message}
             if unexpected:
                 cascade_indices.add(i)
@@ -130,12 +116,12 @@ def main():
     root_causes = [l for i, l in enumerate(unique_leaves) if i not in cascade_indices]
     cascades = [l for i, l in enumerate(unique_leaves) if i in cascade_indices]
 
-    print(f"INVALID: {form_path} ({len(root_causes)} error(s))\n")
+    print(f"INVALID: {form_path} ({len(root_causes)} error(s))")
     for leaf in root_causes:
         print(f"  [{format_path(leaf)}] {leaf.message}")
 
     if cascades:
-        print(f"\n  ({len(cascades)} additional cascade error(s) on parent containers — "
+        print(f"  ({len(cascades)} additional cascade error(s) on parent containers — "
               f"fix the above first)")
 
     if verbose:
@@ -144,7 +130,41 @@ def main():
             print(format_error_tree(error))
             print()
 
-    sys.exit(1)
+    return False
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__.strip())
+        sys.exit(1)
+
+    input_path = Path(sys.argv[1])
+    verbose = "--verbose" in sys.argv or "-v" in sys.argv
+    args = [a for a in sys.argv[2:] if not a.startswith("-")]
+
+    schema_path = Path(args[0]) if args else Path(__file__).parent / "schema.json"
+
+    if not schema_path.exists():
+        print(f"ERROR: Schema not found at {schema_path}", file=sys.stderr)
+        sys.exit(1)
+
+    schema = load_json(schema_path)
+    validator = build_validator(schema)
+
+    if input_path.is_dir():
+        files = [f for f in input_path.iterdir() if f.is_file()]
+        if not files:
+            print(f"No files found in {input_path}", file=sys.stderr)
+            sys.exit(1)
+        results = [validate_file(f, validator, verbose) for f in sorted(files)]
+        valid = sum(results)
+        invalid = len(results) - valid
+        print(f"\n{valid} valid, {invalid} invalid out of {len(results)} file(s)")
+        if invalid:
+            sys.exit(1)
+    else:
+        if not validate_file(input_path, validator, verbose):
+            sys.exit(1)
 
 
 if __name__ == "__main__":
