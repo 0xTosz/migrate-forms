@@ -51,6 +51,9 @@ READONLY_SUPPORTED_TYPES = {
     "numberfield", "textarea", "textfield",
 }
 
+# Component types that support layout in 5.0
+LAYOUT_SUPPORTED_TYPES = {"container", "fieldset"}
+
 
 def looks_like_multilang(obj: dict) -> bool:
     """Return True if every key in the dict is a known language code."""
@@ -106,6 +109,16 @@ def migrate_node(node, parent_key=None):
                       f"If needed, move it to configuration.styles.variables as a CSS custom property.",
                       file=sys.stderr)
                 continue
+
+            # --- layout on unsupported types -> drop ---
+            if key == "layout":
+                comp_type = node.get("type", "")
+                if comp_type and comp_type not in LAYOUT_SUPPORTED_TYPES:
+                    print(f"WARNING: Removed 'layout: {value!r}' from '{comp_type}' "
+                          f"(layout only supported on container and fieldset)",
+                          file=sys.stderr)
+                    continue
+                # supported type or unknown type — fall through
 
             # --- readOnly on unsupported types -> disabled ---
             if key == "readOnly":
