@@ -142,10 +142,22 @@ def migrate_node(node, parent_key=None):
                 # allowBlank: true means not required, which is the default — drop it
                 continue
 
+            # --- dataUrl handling ---
+            # At form root, rename to stateUrl. On table components, drop it
+            # (5.0 tables use bindings instead of a dataUrl).
+            if key == "dataUrl" and node.get("type") == "table":
+                print(f"WARNING: Removed 'dataUrl: {value!r}' from table component "
+                      f"(5.0 tables use bindings; reconnect this data source manually)",
+                      file=sys.stderr)
+                continue
+
             # --- Rename keys ---
             new_key = key
             if key == "dataUrl":
                 new_key = "stateUrl"
+            elif key == "iconClass":
+                new_key = "icon"
+                print(f"INFO: Renamed 'iconClass' -> 'icon'", file=sys.stderr)
 
             # --- Map old 4.x component types to "container" ---
             if key == "type" and parent_key == "components" and isinstance(value, str):

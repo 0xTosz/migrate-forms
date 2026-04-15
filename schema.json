@@ -1,5 +1,5 @@
 {
-  "$id": "https://forms.virtimo.net/5.1.0/schema.json",
+  "$id": "https://forms.virtimo.net/5.0.5/schema.json",
   "$schema": "https://json-schema.org/draft/2019-09/schema",
   "type": "object",
   "additionalProperties": false,
@@ -61,7 +61,7 @@
         },
         "defaultLanguage": {
           "description": "Default language for the form",
-          "type": "string"
+          "$ref": "#/definitions/iso639-1"
         },
         "validateOnChange": {
           "description": "Trigger the validation when after the value changed and the field lost focus",
@@ -92,7 +92,7 @@
                   "items": {
                     "type": "string"
                   }
-                },
+                }, 
                 {
                   "type": "string"
                 }
@@ -125,6 +125,22 @@
         "data" : {
           "description": "Space for additional information (data for the form)",
           "type": "object"
+        },
+        "language": {
+          "description": "Initial language for the form",
+          "$ref": "#/definitions/iso639-1"
+        },
+        "languageOptions": {
+          "description": "Selectable languages",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": { "$ref": "#/definitions/iso639-1" },
+              "label": { "$ref": "#/definitions/label" }
+            }
+          }
         }
       }
     },
@@ -160,12 +176,12 @@
               "payload": {
                 "type": "object",
                 "properties": {
-                  "iconClass": { "type": "string" },
+                  "icon": { "type": "string" },
                   "iconColor": { "type": "string" },
                   "message": { "$ref": "#/definitions/optionalMultiLanguageText" },
                   "title": { "$ref": "#/definitions/optionalMultiLanguageText" },
                   "type": {
-                    "enum": ["error, info", "success"]
+                    "enum": ["error", "info", "success"]
                   }
                 },
                 "additionalProperties": false
@@ -298,10 +314,10 @@
       "required": ["type"],
       "unevaluatedProperties": false,
       "properties": {
-        "type": {
+        "type": { 
           "enum": [
             "button", "checkbox", "checkboxgroup", "combobox", "container",
-            "datefield", "fieldset", "filefield", "html", "image",
+            "datefield", "fieldset", "filefield", "html", "image", 
             "numberfield", "radiogroup", "table", "textarea", "textfield"
           ]
         }
@@ -316,15 +332,15 @@
         },
         {
           "if": { "required": ["type"], "properties": { "type": { "enum": [
-            "checkbox", "checkboxgroup", "combobox", "datefield", "filefield",
+            "checkbox", "checkboxgroup", "combobox", "datefield", "filefield", 
             "numberfield", "radiogroup", "textarea", "textfield"
           ] } } },
           "then": { "$ref": "#/definitions/componentWithDetailedLabel"}
         },
         {
           "if": { "required": ["type"], "properties": { "type": { "enum": [
-            "button", "checkbox", "checkboxgroup", "combobox", "container",
-            "datefield", "fieldset", "filefield", "numberfield", "radiogroup",
+            "button", "checkbox", "checkboxgroup", "combobox", "container", 
+            "datefield", "fieldset", "filefield", "numberfield", "radiogroup", 
             "textarea", "textfield"
           ] } } },
           "then": { "type": "object", "properties": {"icon":{"$ref": "#/definitions/icon"}}}
@@ -332,7 +348,7 @@
         {
           "if": { "required": ["type"], "properties": { "type": { "enum": [
             "button", "container", "checkbox", "checkboxgroup", "combobox",
-            "datefield", "fieldset", "filefield", "numberfield", "radiogroup",
+            "datefield", "fieldset", "filefield", "numberfield", "radiogroup", 
             "table", "textarea", "textfield"
           ] } } },
           "then": { "type": "object", "properties": {
@@ -352,7 +368,7 @@
         },
         {
           "if": { "required": ["type"], "properties": { "type": { "enum": [
-            "container", "combobox", "datefield", "fieldset", "numberfield",
+            "container", "combobox", "datefield", "fieldset", "numberfield", 
             "textarea", "textfield"
           ] } } },
           "then": { "type": "object", "properties": {"readOnly":{"$ref": "#/definitions/readOnly"}}}
@@ -461,7 +477,7 @@
         "minHeight": {
           "description": "The minimum height of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. If set to auto, it will set the width to null meaning it will have its own natural size",
           "anyOf": [{"type": "number"}, {"type": "string"}]
-        },
+        }, 
         "minWidth": {
           "description": "The minimum width of this Component; must be a valid CSS length value, e.g: 300, 100px, 30%, etc. If set to auto, it will set the width to null meaning it will have its own natural size",
           "anyOf": [{"type": "number"}, {"type": "string"}]
@@ -527,7 +543,7 @@
       "description": "Describes the content of the element",
       "$ref": "#/definitions/optionalMultiLanguageText"
     },
-    "layout": {
+    "layout": { 
       "description": "Layout of components within this component",
       "enum": [ "vertical", "horizontal" ]
     },
@@ -551,6 +567,11 @@
       "description": "With required true the user has to input something",
       "anyOf": [{"type": "boolean"}, {"type": "string"}]
     },
+    "iso639-1": {
+      "type": "string",
+      "description": "A 2-character ISO-639-1 code",
+      "pattern": "^(aa|ab|ae|af|ak|am|an|ar|as|av|ay|az|ba|be|bg|bh|bi|bm|bn|bo|br|bs|ca|ce|ch|co|cr|cs|cu|cv|cy|da|de|dv|dz|ee|el|en|eo|es|et|eu|fa|ff|fi|fj|fo|fr|fy|ga|gd|gl|gn|gu|gv|ha|he|hi|ho|hr|ht|hu|hy|hz|ia|id|ie|ig|ii|ik|io|is|it|iu|ja|jv|ka|kg|ki|kj|kk|kl|km|kn|ko|kr|ks|ku|kv|kw|ky|la|lb|lg|li|ln|lo|lt|lu|lv|mg|mh|mi|mk|ml|mn|mr|ms|mt|my|na|nb|nd|ne|ng|nl|nn|no|nr|nv|ny|oc|oj|om|or|os|pa|pi|pl|ps|pt|qu|rm|rn|ro|ru|rw|sa|sc|sd|se|sg|si|sk|sl|sm|sn|so|sq|sr|ss|st|su|sv|sw|ta|te|tg|th|ti|tk|tl|tn|to|tr|ts|tt|tw|ty|ug|uk|ur|uz|ve|vi|vo|wa|wo|xh|yi|yo|za|zh|zu)$"
+    },
     "optionalMultiLanguageText": {
       "description": "This could be a simple string or an object. The object has MULTI_LANGUAGE as key and as value an object with ISO-639-1 codes as keys and strings as values",
       "anyOf": [
@@ -563,22 +584,11 @@
           "properties": {
             "MULTI_LANGUAGE" : {
               "type": "object",
-              "additionalProperties": false,
               "minProperties": 1,
-              "propertyNames": {
-                "description": "Has to be a 2 character ISO-639-1 code",
-                "type": "string",
-                "minLength": 2,
-                "maxLength": 2
-              },
-              "patternProperties": {
-                "^(aa|ab|ae|af|ak|am|an|ar|as|av|ay|az|ba|be|bg|bh|bi|bm|bn|bo|br|bs|ca|ce|ch|co|cr|cs|cu|cv|cy|da|de|dv|dz|ee|el|en|eo|es|et|eu|fa|ff|fi|fj|fo|fr|fy|ga|gd|gl|gn|gu|gv|ha|he|hi|ho|hr|ht|hu|hy|hz|ia|id|ie|ig|ii|ik|io|is|it|iu|ja|jv|ka|kg|ki|kj|kk|kl|km|kn|ko|kr|ks|ku|kv|kw|ky|la|lb|lg|li|ln|lo|lt|lu|lv|mg|mh|mi|mk|ml|mn|mr|ms|mt|my|na|nb|nd|ne|ng|nl|nn|no|nr|nv|ny|oc|oj|om|or|os|pa|pi|pl|ps|pt|qu|rm|rn|ro|ru|rw|sa|sc|sd|se|sg|si|sk|sl|sm|sn|so|sq|sr|ss|st|su|sv|sw|ta|te|tg|th|ti|tk|tl|tn|to|tr|ts|tt|tw|ty|ug|uk|ur|uz|ve|vi|vo|wa|wo|xh|yi|yo|za|zh|zu)$": {
-                  "type": "string"
-                }
-              }
+              "propertyNames": { "$ref": "#/definitions/iso639-1" }
             }
           }
-        },
+        }, 
         {
           "type": "string"
         }
@@ -587,7 +597,7 @@
     "button": {
       "type": "object",
       "properties": {
-        "action": {
+        "action": { 
           "enum": [
             "submit",
             "reset",
@@ -733,22 +743,19 @@
     "radio": {
       "type": "object",
       "unevaluatedProperties": false,
+      "properties": {
+        "disabled": {"$ref": "#/definitions/disabled"},
+        "icon": {"$ref": "#/definitions/icon"},
+        "label": {"$ref": "#/definitions/label"},
+        "onChange": {"$ref": "#/definitions/onChange"},
+        "value": { 
+          "anyOf": [{"type": "number"}, {"type": "string"}]
+        }
+      },
+      "required": [
+        "value"
+      ],
       "allOf": [
-        {
-          "type": "object",
-          "properties": {
-            "disabled": {"$ref": "#/definitions/disabled"},
-            "icon": {"$ref": "#/definitions/icon"},
-            "label": {"$ref": "#/definitions/label"},
-            "onChange": {"$ref": "#/definitions/onChange"},
-            "value": {
-              "anyOf": [{"type": "number"}, {"type": "string"}]
-            }
-          },
-          "required": [
-            "value"
-          ]
-        },
         {"$ref": "#/definitions/componentForms"},
         {"$ref": "#/definitions/componentWithBoxLabel"},
         {"$ref": "#/definitions/componentWithDetailedLabel"}
@@ -757,7 +764,7 @@
     "radiogroup": {
       "type": "object",
       "properties": {
-        "value": {
+        "value": { 
           "anyOf": [{"type": "number"}, {"type": "string"}]
         },
         "options": {
@@ -773,35 +780,45 @@
       "type": "object",
       "properties": {
         "data": {"anyOf": [{"type": "array"}, {"type": "string"}] },
-        "dataUrl": {"type": "string"},
         "cellEditing": {"type": "boolean"},
         "rowEditing": {"type": "boolean"},
-        "columns": {
+        "columns": { 
           "type": "array",
-          "items": {
-            "type": "object",
-            "allOf": [
-              {
-                "type": "object",
-                "unevaluatedProperties": false,
-                "properties" : {
-                  "type": {
-                    "enum": [
-                      "text",
-                      "number",
-                      "date",
-                      "boolean"
-                    ]
-                  },
-                  "label": {"$ref": "#/definitions/label"},
-                  "fieldName": {"type": "string"}
-                }
-              },
-              {"$ref": "#/definitions/componentForms"}
-            ]
-          }
+          "items": {"$ref": "#/definitions/tableColumn"}
         }
       }
+    },
+    "tableColumn": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "properties" : {
+        "disabled": { "$ref": "#/definitions/disabled" },
+        "label": { "$ref": "#/definitions/label" },
+        "fieldName": { "type": "string" },
+        "format": { "type": "string" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "enum": [
+                "text",
+                "number",
+                "date"
+              ]
+            },
+            "readOnly": { "$ref": "#/definitions/readOnly" }
+          }
+        },
+        {
+          "properties": {
+            "type": { "const": "boolean" }
+          }
+        }
+      ],
+      "allOf": [
+        { "$ref": "#/definitions/componentForms" }
+      ]
     },
     "textarea": {
       "type": "object",
