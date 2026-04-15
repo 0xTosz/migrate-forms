@@ -10,6 +10,7 @@ Flags: -v / --verbose  show full error tree
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -99,18 +100,20 @@ def validate_file(form_path: Path, validator: Draft201909Validator, verbose: boo
     # Sort deepest-first so root causes appear before their cascade effects
     unique_leaves.sort(key=lambda e: list(e.absolute_path), reverse=True)
 
-    # Identify cascade noise: unevaluatedProperties errors on containers whose
-    # only "unexpected" props are the ones the schema would allow for that type.
-    # These are caused by a child validation failure, not the container itself.
+    # Identify cascade noise: unevaluatedProperties errors on containers where
+    # EVERY unexpected prop is one the schema would normally allow for that type.
+    # These wrappers fire because a child failed, not the container itself — but
+    # only filter when there are no genuinely unknown props mixed in.
     CONTAINER_PROPS = {"components", "layout", "languageButton"}
+    unexpected_re = re.compile(r"'([^']+)'")
     cascade_indices = set()
     for i, leaf in enumerate(unique_leaves):
         if leaf.validator != "unevaluatedProperties":
             continue
         instance = leaf.instance
         if isinstance(instance, dict) and instance.get("type") in ("container", "fieldset"):
-            unexpected = {p for p in CONTAINER_PROPS if f"'{p}'" in leaf.message}
-            if unexpected:
+            unexpected = set(unexpected_re.findall(leaf.message))
+            if unexpected and unexpected <= CONTAINER_PROPS:
                 cascade_indices.add(i)
 
     root_causes = [l for i, l in enumerate(unique_leaves) if i not in cascade_indices]
